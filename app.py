@@ -6,16 +6,12 @@ import html
 import time
 from io import BytesIO
 
-# --- CONFIGURAZIONE PAGINA ---
 st.set_page_config(page_title="Shopify Translator", layout="wide")
 st.title("🌍 Shopify Translator Tool")
 st.markdown("Load the CSV, write the product handle and translate it with DeepL.")
 
-# --- SIDEBAR (CONFIGURAZIONE) ---
 with st.sidebar:
     st.header("Configuration")
-    # Puoi mettere qui la chiave fissa se vuoi nasconderla ai colleghi
-    # api_key = "LA_TUA_CHIAVE_FISSA" 
     api_key = st.text_input("DeepL API Key", type="password")
 
     st.info("Instructions:\n1. Load the Shopify Master Export.\n2. Paste the Handles.\n3. Check the preview.\n4. Translate and Download.")
@@ -25,9 +21,9 @@ LINK_LANG_MAP = {'it': 'it', 'fr': 'fr', 'de': 'de', 'es': 'es', 'nl': 'nl', 'fi
 
 def protect_layout(text):
     if not isinstance(text, str): return text
-    text = re.sub(r'(\d)\.(\d)', r'\1_DOT_\2', text) # Proteggi 2.0
-    text = re.sub(r'<\s*br\s*/?>', '####BR####', text, flags=re.IGNORECASE) # Proteggi <br>
-    text = text.replace('####BR####-', '####BR####_DASH_') # Proteggi elenchi
+    text = re.sub(r'(\d)\.(\d)', r'\1_DOT_\2', text)
+    text = re.sub(r'<\s*br\s*/?>', '####BR####', text, flags=re.IGNORECASE)
+    text = text.replace('####BR####-', '####BR####_DASH_')
     text = text.replace('####BR#### -', '####BR####_DASH_ ')
     return text
 
@@ -59,24 +55,19 @@ def localize_links(text, lang_code):
         text = re.sub(r'(?i)karhu\.com/products', f'karhu.com/{url_lang}/products', text)
     return text
 
-# --- INTERFACCIA UTENTE ---
 
-#  UPLOAD FILE
 uploaded_file = st.file_uploader("Load your Product Master Export CSV file from Shopify. ", type=['csv'])
 
-# INPUT HANDLE
 handles_input = st.text_area("Write the Product Handle (karhu-example-2-0-white-white)", height=150)
 
-# LOGICA DI RICERCA
+
 if uploaded_file and handles_input:
-    # Pulizia input handle
     target_handles = [h.strip() for h in re.split(r'[,\n]', handles_input) if h.strip()]
     
     if st.button(" Search Products"):
         try:
             df = pd.read_csv(uploaded_file, dtype={'Identification': str})
             
-            # Cerca ID basati sugli handle
             handle_rows = df[
                 (df['Field'] == 'handle') & 
                 (df['Default content'].isin(target_handles))
@@ -87,10 +78,8 @@ if uploaded_file and handles_input:
             if len(found_ids) == 0:
                 st.error("No products found. Check the handles.")
             else:
-                # Estrai tutte le righe
                 product_df = df[df['Identification'].isin(found_ids)].copy()
                 
-                # Salva nello "Stato" della app (così non si perde al ricaricamento)
                 st.session_state['product_df'] = product_df
                 st.session_state['found_ids'] = found_ids
                 
@@ -100,7 +89,6 @@ if uploaded_file and handles_input:
         except Exception as e:
             st.error(f"Error reading the file: {e}")
 
-# TRADUZIONE
 if 'product_df' in st.session_state and api_key:
     st.divider()
     st.subheader("Phase 2: Translation")
@@ -109,11 +97,9 @@ if 'product_df' in st.session_state and api_key:
         translator = deepl.Translator(api_key)
         df_to_process = st.session_state['product_df'].copy()
         
-        # Resetta colonne tradotte vecchie
         df_to_process['Translated content'] = None
         df_to_process['Translated content'] = df_to_process['Translated content'].astype(object)
         
-        # Barra di progresso
         progress_bar = st.progress(0)
         status_text = st.empty()
         
@@ -134,7 +120,6 @@ if 'product_df' in st.session_state and api_key:
                 status_text.text(f"Translating...: ID {row['Identification']} ({target_lang})...")
                 
                 try:
-                    # LOGICA "MASKING PREVENTIVO"
                     protected = protect_layout(row['Default content'])
                     masked = mask_tags(protected)
                     
@@ -155,10 +140,7 @@ if 'product_df' in st.session_state and api_key:
                     st.warning(f"Errore su {locale}: {e}")
                     
         status_text.text("Translation completed!")
-        #
-        st.balloons()
         
-        # 5. DOWNLOAD
         csv = df_to_process.to_csv(index=False).encode('utf-8')
         
         st.download_button(
