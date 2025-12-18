@@ -9,6 +9,3 @@ To make it work, you will need:
 	- File: CSV for text editors
 - The handle of the product (ex. karhu-mens-ikoni-run-2-0-examples)
 
-If something is not working anymore, please contact cristiano.risso@karhu.com
-
-Enjoy :))

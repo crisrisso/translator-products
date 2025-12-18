@@ -108,7 +108,7 @@ if uploaded_file and handles_input:
             found_ids = handle_rows['Identification'].unique()
             
             if len(found_ids) == 0:
-                st.error("No products found. Check the handles.")
+                st.error("No products found. Check the handles.", width=400)
             else:
                 product_df = df[df['Identification'].isin(found_ids)].copy()
                 
@@ -116,7 +116,7 @@ if uploaded_file and handles_input:
                 st.session_state['found_ids'] = found_ids
 
                 st.badge("Success", icon=":material/check:", color="green")
-                st.success(f"Found {len(found_ids)} products (Total {len(product_df)} rows to process).")
+                st.success(f"Found {len(found_ids)} products (Total {len(product_df)} rows to process).", width=400)
                 st.dataframe(product_df.head(10))
                 
         except Exception as e:
