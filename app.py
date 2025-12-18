@@ -20,9 +20,11 @@ def check_password():
 
     if st.session_state["password_correct"]:
         return True
-
-    st.markdown("### Protected Area: insert the password to access the translator.")
-    pwd_input = st.text_input("Insert the password:", type="password")
+    st.title("KARHU Internal Translator Tool")
+    st.markdown("### Protected Area:")
+    st.markdown("Insert the password to access to the translator tool.")
+    pwd_input = st.text_input("Insert the password:", type="password", width=250, placeholder="Password")
+    st.info("You don't remember the password? \n- Ask the E-commerce Team.", width=400)
     
     if pwd_input:
         if pwd_input == SECRET_PASSWORD:
@@ -86,9 +88,9 @@ def localize_links(text, lang_code):
     return text
 
 
-uploaded_file = st.file_uploader("Load your Product Master Export CSV file from Shopify. ", type=['csv'])
+uploaded_file = st.file_uploader("Load your Product Master Export CSV file from Shopify. ", type=['csv'], width=700)
 
-handles_input = st.text_area("Write the Product Handle (karhu-example-2-0-white-white)", height=150)
+handles_input = st.text_area("Write the Product Handle (karhu-example-2-0-white-white)", height=150, width=700)
 
 
 if uploaded_file and handles_input:
@@ -112,7 +114,8 @@ if uploaded_file and handles_input:
                 
                 st.session_state['product_df'] = product_df
                 st.session_state['found_ids'] = found_ids
-                
+
+                st.badge("Success", icon=":material/check:", color="green")
                 st.success(f"Found {len(found_ids)} products (Total {len(product_df)} rows to process).")
                 st.dataframe(product_df.head(10))
                 
