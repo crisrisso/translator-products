@@ -156,7 +156,7 @@ if 'product_df' in st.session_state and api_key:
                     
         status_text.text("Translation completed!")
         #
-        # st.balloons()
+        st.balloons()
         
         # 5. DOWNLOAD
         csv = df_to_process.to_csv(index=False).encode('utf-8')
