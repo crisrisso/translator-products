@@ -7,8 +7,38 @@ import time
 from io import BytesIO
 
 st.set_page_config(page_title="Shopify Translator", layout="wide")
-st.title("🌍 Shopify Translator Tool")
-st.markdown("Load the CSV, write the product handle and translate it with DeepL.")
+
+if "password_app" in st.secrets:
+    SECRET_PASSWORD = st.secrets["password_app"]
+else:
+    st.error("Password not set in secrets.")
+    st.stop()
+
+def check_password():
+    if "password_correct" not in st.session_state:
+        st.session_state["password_correct"] = False
+
+    if st.session_state["password_correct"]:
+        return True
+
+    st.markdown("### Protected Area: insert the password to access the translator.")
+    pwd_input = st.text_input("Insert the password:", type="password")
+    
+    if pwd_input:
+        if pwd_input == SECRET_PASSWORD:
+            st.session_state["password_correct"] = True
+            st.rerun()
+        else:
+            st.error("Wrong passord, access denied. Try again.")
+            
+    return False
+
+
+if not check_password():
+    st.stop()
+
+st.title("Shopify Translator Tool")
+st.markdown("Internal tool for translating product descriptions with DeepL.")
 
 with st.sidebar:
     st.header("Configuration")
