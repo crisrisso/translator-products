@@ -41,7 +41,7 @@ if not check_password():
 
 st.title("Shopify Translator Tool")
 st.markdown("Internal tool for translating product descriptions with DeepL.")
-
+st.info("Remember: \n- After the import of the translated CSV, always double-check the translations on the Translate&Adapt App on Shopify \n- Do not share the DeepL API key outside the E-commerce Team.", width=500, icon="ℹ️")
 with st.sidebar:
     st.header("Configuration")
     api_key = st.text_input("DeepL API Key", type="password")
