@@ -43,8 +43,19 @@ st.title("Shopify Translator Tool")
 st.markdown("Internal tool for translating product descriptions with DeepL.")
 st.info("Remember: \n- After the import of the translated CSV, always double-check the translations on the Translate&Adapt App on Shopify \n- Do not share the DeepL API key outside the E-commerce Team.", width=500, icon="ℹ️")
 with st.sidebar:
-    st.header("Configuration")
-    api_key = st.text_input("DeepL API Key", type="password")
+    st.header("⚙️ Configuration")
+    api_key = st.text_input("DeepL API Key", type="password", help="It is required to perform translations. Get it from the E-commerce Team or DeepL account")
+    if api_key:
+        try:
+            translator_check = deepl.Translator(api_key)
+            usage = translator_check.get_usage()
+            if usage.character.limit:
+                percent = (usage.character.count / usage.character.limit) * 100
+                st.write("---")
+                st.write(f"📊 **API status:** {percent:.1f}% used")
+                st.progress(percent / 100)
+        except:
+            pass
 
     st.info("Instructions:\n1. Load the Shopify Master Export.\n2. Paste the Handles.\n3. Check the preview.\n4. Translate and Download.")
 
@@ -53,7 +64,16 @@ LINK_LANG_MAP = {'it': 'it', 'fr': 'fr', 'de': 'de', 'es': 'es', 'nl': 'nl', 'fi
 
 def protect_layout(text):
     if not isinstance(text, str): return text
-    text = re.sub(r'(\d)\.(\d)', r'\1_DOT_\2', text)
+    #text = re.sub(r'(\d)\.(\d)', r'\1_DOT_\2', text)
+    text = re.sub(r'(\d+)\.(\d+)', r'####NUM_\1_DOT_\2####', text)
+
+    text = re.sub(r'<\s*u\s*>', '####OPEN_U####', text, flags=re.IGNORECASE)
+    text = re.sub(r'<\s*/\s*u\s*>', '####CLOSE_U####', text, flags=re.IGNORECASE)
+    #text = re.sub(r'<\s*b\s*>', '####OPEN_B####', text, flags=re.IGNORECASE)
+    #text = re.sub(r'<\s*/\s*b\s*>', '####CLOSE_B####', text, flags=re.IGNORECASE)
+    #text = re.sub(r'<\s*strong\s*>', '####OPEN_STRONG####', text, flags=re.IGNORECASE)
+    #text = re.sub(r'<\s*/\s*strong\s*>', '####CLOSE_STRONG####', text, flags=re.IGNORECASE)
+
     text = re.sub(r'<\s*br\s*/?>', '####BR####', text, flags=re.IGNORECASE)
     text = text.replace('####BR####-', '####BR####_DASH_')
     text = text.replace('####BR#### -', '####BR####_DASH_ ')
@@ -71,7 +91,16 @@ def unmask_tags(text):
 
 def restore_layout(text):
     if not isinstance(text, str): return text
-    text = text.replace('_DOT_', '.')
+    text = re.sub(r'####NUM_(\d+)_DOT_(\d+)####', r'\1.\2', text)
+    #text = text.replace('_DOT_', '.')
+
+    text = text.replace('####OPEN_U####', '<u>')
+    text = text.replace('####CLOSE_U####', '</u>')
+    #text = text.replace('####OPEN_B####', '<b>')
+    #text = text.replace('####CLOSE_B####', '</b>')
+    #text = text.replace('####OPEN_STRONG####', '<strong>')
+    #text = text.replace('####CLOSE_STRONG####', '</strong>')
+
     text = text.replace('_DASH_', '-')
     text = text.replace('####BR####', '<br>')
     text = text.replace('<br> _DASH_', '<br>-')
@@ -173,6 +202,22 @@ if 'product_df' in st.session_state and api_key:
                     st.warning(f"Errore su {locale}: {e}")
                     
         status_text.text("Translation completed!")
+
+        try:
+            usage = translator.get_usage()
+            st.divider()
+            st.markdown("### 📊 Report DeepL Usage:")
+            
+            if usage.character.limit:
+                col1, col2, col3 = st.columns(3)
+                col1.metric("This month usage", f"{usage.character.count:,}")
+                col2.metric("Total Limit", f"{usage.character.limit:,}")
+                remaining = usage.character.limit - usage.character.count
+                col3.metric("Remaining", f"{remaining:,}", delta_color="normal")
+            else:
+                st.info(f"Characters used: {usage.character.count:,} (Unlimited plan)")
+        except:
+            st.warning("Impossible to retrieve DeepL usage data.")
         
         csv = df_to_process.to_csv(index=False).encode('utf-8')
         
