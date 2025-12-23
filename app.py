@@ -119,7 +119,7 @@ def localize_links(text, lang_code):
 
 uploaded_file = st.file_uploader("Load your Product Master Export CSV file from Shopify. ", type=['csv'], width=700, help="You can get it from Shopify Admin > Settings > Languages > Export and selecting: Languages: All languages, Translation Status: not translated, Content: Selected Content/Products, File: CSV for text editors.")
 
-handles_input = st.text_area("Write the Product Handle (karhu-example-2-0-white-white)", height=150, width=700, help="All the handles starts with 'karhu-'. Here an example of handle: 'karhu-womens-mestari-run-2-0-hivo-raindrops-marlin'")
+handles_input = st.text_area("Write the Product Handle (karhu-example-2-0-white-white)", height=150, width=700, help="All the handles start with 'karhu-'. Here an example of handle: 'karhu-womens-mestari-run-2-0-hivo-raindrops-marlin'")
 
 
 if uploaded_file and handles_input:
