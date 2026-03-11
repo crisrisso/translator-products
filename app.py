@@ -60,7 +60,7 @@ with st.sidebar:
     st.info("Instructions:\n1. Load the Shopify Master Export.\n2. Paste the Handles.\n3. Check the preview.\n4. Translate and Download.")
 
 
-LINK_LANG_MAP = {'it': 'it', 'fr': 'fr', 'de': 'de', 'es': 'es', 'nl': 'nl', 'fi': 'fi'}
+LINK_LANG_MAP = {'it': 'it', 'fr': 'fr', 'de': 'de', 'es': 'es', 'nl': 'nl', 'fi': 'fi', 'pl': 'pl'}
 
 def protect_layout(text):
     if not isinstance(text, str): return text
@@ -155,12 +155,24 @@ if 'product_df' in st.session_state and api_key:
     st.divider()
     st.subheader("Phase 2: Translation")
 
+    available_langs = list(LINK_LANG_MAP.keys())
+    selected_langs = st.multiselect(
+        "Select the languages you want to translate:",
+        options=available_langs,
+        default=available_langs,
+        help="Remove the languages you have already translated to save DeepL characters."
+    )
+
     if st.button("Start Translation"):
+        if not selected_langs:
+            st.warning("Per favore, seleziona almeno una lingua prima di iniziare.")
+            st.stop()
+
         translator = deepl.Translator(api_key)
         df_to_process = st.session_state['product_df'].copy()
         
-        df_to_process['Translated content'] = None
-        df_to_process['Translated content'] = df_to_process['Translated content'].astype(object)
+        if 'Translated content' not in df_to_process.columns:
+            df_to_process['Translated content'] = None
         
         progress_bar = st.progress(0)
         status_text = st.empty()
@@ -176,6 +188,10 @@ if 'product_df' in st.session_state and api_key:
             if row['Field'] not in fields_to_translate: continue
             
             locale = str(row['Locale']).lower()
+            
+            if locale not in selected_langs: 
+                continue
+            
             target_lang = LINK_LANG_MAP.get(locale)
             
             if target_lang and pd.notna(row['Default content']):
